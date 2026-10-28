@@ -48,3 +48,4 @@ export async function createOrganization(req, res, next) {
     next(error);
   }
 }
+

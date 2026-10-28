@@ -17,3 +17,4 @@ router.get('/current', getCurrentOrganization);
 router.post('/', validate(createOrgSchema), createOrganization);
 
 export default router;
+
