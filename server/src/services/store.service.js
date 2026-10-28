@@ -11,7 +11,14 @@ const memoryStore = {
       name: 'OVE Solutions HQ',
       slug: 'ove-solutions',
       plan: 'enterprise',
+      status: 'active',
       ownerId: 'user_admin_123',
+      limits: {
+        maxLeads: 100000,
+        maxMembers: 50,
+        geminiTier: 'unlimited',
+        webhooksEnabled: true,
+      },
       createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 60).toISOString(),
     },
@@ -20,9 +27,185 @@ const memoryStore = {
       name: 'QUE Global Enterprises',
       slug: 'que-global',
       plan: 'pro',
+      status: 'active',
       ownerId: 'user_admin_123',
+      limits: {
+        maxLeads: 10000,
+        maxMembers: 10,
+        geminiTier: 'pro',
+        webhooksEnabled: true,
+      },
       createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+    },
+  ],
+  subscriptionPlans: [
+    {
+      id: 'starter',
+      name: 'Starter Tier',
+      tagline: 'Ideal for small sales teams initiating structured outreach',
+      priceMonthly: 49,
+      priceAnnual: 490,
+      currency: 'USD',
+      limits: {
+        maxLeads: 1000,
+        maxMembers: 3,
+        geminiTier: 'basic',
+        webhooksEnabled: false,
+        bulkImportEnabled: true,
+      },
+      features: [
+        'Up to 1,000 Contacts & Leads',
+        '3 Active Team Members',
+        'Standard Kanban Pipeline',
+        'Resend Email Outreach',
+        'CSV Lead Import',
+      ],
+      isPopular: false,
+    },
+    {
+      id: 'pro',
+      name: 'Professional Tier',
+      tagline: 'For fast-growing companies demanding automated distribution and AI',
+      priceMonthly: 149,
+      priceAnnual: 1490,
+      currency: 'USD',
+      limits: {
+        maxLeads: 10000,
+        maxMembers: 10,
+        geminiTier: 'pro',
+        webhooksEnabled: true,
+        bulkImportEnabled: true,
+      },
+      features: [
+        'Up to 10,000 Contacts & Leads',
+        '10 Active Team Members',
+        'Automated Round-Robin Lead Distribution',
+        'Google Gemini AI Touchpoint Summaries',
+        'AI Email Composer with Resend',
+        'n8n Inbound Webhooks & Automation',
+      ],
+      isPopular: true,
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise Tier',
+      tagline: 'High-volume organizations requiring unlimited scale and governance',
+      priceMonthly: 499,
+      priceAnnual: 4990,
+      currency: 'USD',
+      limits: {
+        maxLeads: 100000,
+        maxMembers: 50,
+        geminiTier: 'unlimited',
+        webhooksEnabled: true,
+        bulkImportEnabled: true,
+      },
+      features: [
+        'Up to 100,000 Contacts & Leads',
+        '50 Team Members with Granular RBAC',
+        'Round-Robin & Custom Distribution Pools',
+        'Priority Gemini AI Intelligence Engine',
+        'Platform Audit Logs & Dedicated Webhooks',
+        '24/7 Dedicated SaaS SLA & Support',
+      ],
+      isPopular: false,
+    },
+  ],
+  organizationApplications: [
+    {
+      id: 'app_apex_1',
+      companyName: 'Apex Logistics Ltd',
+      workEmail: 'admin@apexlogistics.com',
+      phone: '+1 (555) 345-6789',
+      industry: 'Supply Chain & Logistics',
+      companySize: '51-200',
+      ownerName: 'Marcus Vance',
+      planId: 'pro',
+      billingCycle: 'annual',
+      amountDue: 1490,
+      currency: 'USD',
+      status: 'under_review',
+      paymentReference: 'UTR-98231448',
+      proofNotes: 'Wire transfer payment of $1,490 submitted from Chase bank ending #4012.',
+      proofFileUrl: 'https://storage.ove.com/receipts/apex_wire_98231.pdf',
+      submittedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+      createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+    },
+    {
+      id: 'app_zeta_2',
+      companyName: 'Zeta BioHealth Corp',
+      workEmail: 'contact@zetabio.com',
+      phone: '+1 (555) 890-1234',
+      industry: 'Healthcare & Biotech',
+      companySize: '201-500',
+      ownerName: 'Dr. Aris Thorne',
+      planId: 'enterprise',
+      billingCycle: 'monthly',
+      amountDue: 499,
+      currency: 'USD',
+      status: 'payment_pending',
+      paymentReference: null,
+      proofNotes: null,
+      proofFileUrl: null,
+      submittedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    },
+  ],
+  memberships: [
+    {
+      id: 'mem_1',
+      userId: 'user_admin_123',
+      userName: 'Sarah Chen',
+      userEmail: 'admin@ove.com',
+      tenantId: 'org_ove_main',
+      role: 'tenant_owner',
+      isActive: true,
+      createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
+    },
+    {
+      id: 'mem_2',
+      userId: 'user_sales_rep_123',
+      userName: 'Alex Morgan',
+      userEmail: 'sales@ove.com',
+      tenantId: 'org_ove_main',
+      role: 'sales_rep',
+      isActive: true,
+      createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
+    },
+    {
+      id: 'mem_3',
+      userId: 'user_admin_123',
+      userName: 'Sarah Chen',
+      userEmail: 'admin@ove.com',
+      tenantId: 'org_que_corp',
+      role: 'tenant_admin',
+      isActive: true,
+      createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+    },
+  ],
+  auditLogs: [
+    {
+      id: 'audit_log_1',
+      action: 'tenant_activated',
+      actorId: 'user_super_admin_1',
+      actorEmail: 'superadmin@ove.com',
+      targetType: 'organization',
+      targetId: 'org_ove_main',
+      details: 'SuperAdmin provisioned primary tenant workspace OVE Solutions HQ with Enterprise plan.',
+      createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
+    },
+    {
+      id: 'audit_log_2',
+      action: 'tenant_activated',
+      actorId: 'user_super_admin_1',
+      actorEmail: 'superadmin@ove.com',
+      targetType: 'organization',
+      targetId: 'org_que_corp',
+      details: 'SuperAdmin approved application for QUE Global Enterprises with Pro plan.',
+      createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
     },
   ],
   leads: [
@@ -299,6 +482,18 @@ const memoryStore = {
   emailLogs: [],
 };
 
+const GLOBAL_COLLECTIONS = [
+  'organizations',
+  'organizationApplications',
+  'subscriptionPlans',
+  'auditLogs',
+  'users',
+];
+
+function isGlobalCollection(name) {
+  return GLOBAL_COLLECTIONS.includes(name);
+}
+
 /**
  * Universal Store Helper that abstracts Cloud Firestore and Memory Store with Multi-Tenancy
  */
@@ -307,11 +502,12 @@ export const store = {
 
   // Collection Query with Tenant Isolation
   async list(collectionName, filterFn = null, tenantId = null) {
+    const isGlobal = isGlobalCollection(collectionName);
     if (this.isMockStore()) {
       const items = memoryStore[collectionName] || [];
       return items.filter((item) => {
-        // Enforce tenant boundary unless collection is global (like organizations) or tenantId not specified
-        if (tenantId && collectionName !== 'organizations' && item.tenantId && item.tenantId !== tenantId) {
+        // Enforce tenant boundary unless collection is global or tenantId not specified
+        if (!isGlobal && tenantId && item.tenantId && item.tenantId !== tenantId) {
           return false;
         }
         return filterFn ? filterFn(item) : true;
@@ -319,7 +515,7 @@ export const store = {
     }
 
     let query = db.collection(collectionName);
-    if (tenantId && collectionName !== 'organizations') {
+    if (!isGlobal && tenantId) {
       query = query.where('tenantId', '==', tenantId);
     }
 
@@ -333,11 +529,12 @@ export const store = {
 
   // Document Find by ID with Tenant Scoping
   async getById(collectionName, id, tenantId = null) {
+    const isGlobal = isGlobalCollection(collectionName);
     if (this.isMockStore()) {
       const items = memoryStore[collectionName] || [];
       const item = items.find((it) => it.id === id);
       if (!item) return null;
-      if (tenantId && collectionName !== 'organizations' && item.tenantId && item.tenantId !== tenantId) {
+      if (!isGlobal && tenantId && item.tenantId && item.tenantId !== tenantId) {
         return null;
       }
       return item;
@@ -346,7 +543,7 @@ export const store = {
     const doc = await db.collection(collectionName).doc(id).get();
     if (!doc.exists) return null;
     const data = { id: doc.id, ...doc.data() };
-    if (tenantId && collectionName !== 'organizations' && data.tenantId && data.tenantId !== tenantId) {
+    if (!isGlobal && tenantId && data.tenantId && data.tenantId !== tenantId) {
       return null;
     }
     return data;
@@ -356,12 +553,13 @@ export const store = {
   async create(collectionName, data, tenantId = null) {
     const id = data.id || `${collectionName}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const now = new Date().toISOString();
-    const effectiveTenantId = tenantId || data.tenantId || 'org_ove_main';
+    const isGlobal = isGlobalCollection(collectionName);
+    const effectiveTenantId = tenantId || data.tenantId || (!isGlobal ? 'org_ove_main' : undefined);
 
     const record = {
       ...data,
       id,
-      ...(collectionName !== 'organizations' && { tenantId: effectiveTenantId }),
+      ...(!isGlobal && effectiveTenantId ? { tenantId: effectiveTenantId } : {}),
       createdAt: data.createdAt || now,
       updatedAt: data.updatedAt || now,
     };
@@ -388,12 +586,13 @@ export const store = {
 
   // Update Document
   async update(collectionName, id, updates, tenantId = null) {
+    const isGlobal = isGlobalCollection(collectionName);
     const now = new Date().toISOString();
     if (this.isMockStore()) {
       const items = memoryStore[collectionName] || [];
       const index = items.findIndex((item) => {
         if (item.id !== id) return false;
-        if (tenantId && collectionName !== 'organizations' && item.tenantId && item.tenantId !== tenantId) {
+        if (!isGlobal && tenantId && item.tenantId && item.tenantId !== tenantId) {
           return false;
         }
         return true;
@@ -406,7 +605,7 @@ export const store = {
     const docRef = db.collection(collectionName).doc(id);
     const existing = await docRef.get();
     if (!existing.exists) return null;
-    if (tenantId && collectionName !== 'organizations' && existing.data().tenantId !== tenantId) {
+    if (!isGlobal && tenantId && existing.data().tenantId !== tenantId) {
       return null;
     }
 
@@ -417,11 +616,12 @@ export const store = {
 
   // Delete Document
   async delete(collectionName, id, tenantId = null) {
+    const isGlobal = isGlobalCollection(collectionName);
     if (this.isMockStore()) {
       const items = memoryStore[collectionName] || [];
       const index = items.findIndex((item) => {
         if (item.id !== id) return false;
-        if (tenantId && collectionName !== 'organizations' && item.tenantId && item.tenantId !== tenantId) {
+        if (!isGlobal && tenantId && item.tenantId && item.tenantId !== tenantId) {
           return false;
         }
         return true;
@@ -434,7 +634,7 @@ export const store = {
     const docRef = db.collection(collectionName).doc(id);
     const existing = await docRef.get();
     if (!existing.exists) return false;
-    if (tenantId && collectionName !== 'organizations' && existing.data().tenantId !== tenantId) {
+    if (!isGlobal && tenantId && existing.data().tenantId !== tenantId) {
       return false;
     }
 

@@ -6,6 +6,8 @@ import ContactsPage from './pages/ContactsPage';
 import ContactDetailPage from './pages/ContactDetailPage';
 import CompaniesPage from './pages/CompaniesPage';
 import TasksPage from './pages/TasksPage';
+import SuperAdminPage from './pages/SuperAdminPage';
+import PublicOnboardingModal from './components/onboarding/PublicOnboardingModal';
 import Card from './components/common/Card';
 import Badge, { StageBadge } from './components/common/Badge';
 import Button from './components/common/Button';
@@ -38,10 +40,32 @@ export default function App() {
     email: 'sarah.chen@ove.com',
     role: 'admin',
   });
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   // Dashboard Data State
   const [metrics, setMetrics] = useState(null);
   const [dashLoading, setDashLoading] = useState(true);
+
+  const handleNavigate = (path) => {
+    if (path === '/super-admin') {
+      localStorage.setItem('crm_auth_token', 'mock_super_admin');
+      setUser({
+        name: 'Platform Super Admin',
+        email: 'superadmin@ove.com',
+        role: 'super_admin',
+      });
+    } else {
+      if (user.role === 'super_admin') {
+        localStorage.setItem('crm_auth_token', 'mock_admin_token');
+        setUser({
+          name: 'Sarah Chen',
+          email: 'sarah.chen@ove.com',
+          role: 'admin',
+        });
+      }
+    }
+    setCurrentPath(path);
+  };
 
   const loadDashboardMetrics = async () => {
     setDashLoading(true);
@@ -82,6 +106,8 @@ export default function App() {
         return 'Accounts & Organizations';
       case '/tasks':
         return 'Tasks & Reminders';
+      case '/super-admin':
+        return 'Platform Super Admin Console';
       default:
         return 'Dashboard';
     }
@@ -122,6 +148,15 @@ export default function App() {
         return <CompaniesPage />;
       case '/tasks':
         return <TasksPage />;
+      case '/super-admin':
+        return (
+          <SuperAdminPage
+            onSwitchToTenant={(tenantId) => {
+              setActiveTenantId(tenantId);
+              handleNavigate('/dashboard');
+            }}
+          />
+        );
       case '/dashboard':
       default:
         return (
@@ -395,19 +430,31 @@ export default function App() {
   };
 
   return (
-    <AppShell
-      currentPath={currentPath}
-      onNavigate={(path) => setCurrentPath(path)}
-      title={getPageTitle()}
-      user={user}
-      onTenantChanged={(newTenantId) => {
-        setActiveTenantId(newTenantId);
-        loadDashboardMetrics();
-      }}
-    >
-      <div key={activeTenantId}>
-        {renderCurrentView()}
-      </div>
-    </AppShell>
+    <>
+      <AppShell
+        currentPath={currentPath}
+        onNavigate={handleNavigate}
+        title={getPageTitle()}
+        user={user}
+        onTenantChanged={(newTenantId) => {
+          setActiveTenantId(newTenantId);
+          loadDashboardMetrics();
+        }}
+        onOpenOnboarding={() => setIsOnboardingOpen(true)}
+      >
+        <div key={activeTenantId}>
+          {renderCurrentView()}
+        </div>
+      </AppShell>
+
+      <PublicOnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        onTenantActivated={(newTenantId) => {
+          setActiveTenantId(newTenantId);
+          handleNavigate('/dashboard');
+        }}
+      />
+    </>
   );
 }

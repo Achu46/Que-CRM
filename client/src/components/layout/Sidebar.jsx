@@ -9,7 +9,9 @@ import {
   Sparkles,
   LogOut,
   Shield,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck,
+  PlusCircle
 } from 'lucide-react';
 import BrandLogo from '../common/BrandLogo';
 import TenantSwitcher from './TenantSwitcher';
@@ -22,6 +24,7 @@ export default function Sidebar({
   isMobileOpen = false,
   onCloseMobile,
   onTenantChanged,
+  onOpenOnboarding,
 }) {
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -37,12 +40,25 @@ export default function Sidebar({
     if (onCloseMobile) onCloseMobile();
   };
 
+  const isSuperAdminActive = currentPath === '/super-admin';
+
   const sidebarContent = (
     <aside className="w-64 h-full bg-white border-r border-ove-border flex flex-col justify-between select-none">
       {/* Top Branding & Multi-Tenant Switcher */}
-      <div className="p-4 border-b border-ove-border space-y-3.5">
+      <div className="p-4 border-b border-ove-border space-y-3">
         <BrandLogo size="md" showTagline={true} />
         <TenantSwitcher onTenantChanged={onTenantChanged} />
+
+        {onOpenOnboarding && (
+          <button
+            type="button"
+            onClick={onOpenOnboarding}
+            className="w-full flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold bg-ove-soft hover:bg-ove-soft/80 border border-ove-border text-ove-forest transition-colors"
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-ove-primary" />
+            <span>+ SaaS Signup / Register</span>
+          </button>
+        )}
       </div>
 
       {/* Main Nav Links */}
@@ -59,7 +75,7 @@ export default function Sidebar({
               key={item.path}
               type="button"
               onClick={() => handleNavClick(item.path)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
                 isActive
                   ? 'bg-ove-soft text-ove-forest border-l-4 border-ove-forest shadow-xs font-semibold pl-2.5'
                   : 'text-ove-muted hover:text-ove-text hover:bg-ove-soft/60'
@@ -78,7 +94,33 @@ export default function Sidebar({
           );
         })}
 
-        <div className="pt-6 px-3 pb-2 text-[11px] font-semibold tracking-wider text-ove-muted uppercase">
+        {/* Platform Governance Section */}
+        <div className="pt-4 px-3 pb-2 text-[11px] font-semibold tracking-wider text-ove-muted uppercase">
+          Platform Governance
+        </div>
+        <button
+          type="button"
+          onClick={() => handleNavClick('/super-admin')}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+            isSuperAdminActive
+              ? 'bg-ove-forest text-white shadow-xs font-semibold'
+              : 'text-ove-muted hover:text-ove-text hover:bg-ove-soft/60'
+          }`}
+        >
+          <div className="flex items-center space-x-3">
+            <ShieldCheck
+              className={`w-4 h-4 ${isSuperAdminActive ? 'text-white' : 'text-ove-forest'}`}
+            />
+            <span>Super Admin</span>
+          </div>
+          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+            isSuperAdminActive ? 'bg-white/20 text-white' : 'bg-ove-forest/10 text-ove-forest'
+          }`}>
+            Gov
+          </span>
+        </button>
+
+        <div className="pt-4 px-3 pb-2 text-[11px] font-semibold tracking-wider text-ove-muted uppercase">
           AI & Multi-Tenant Engine
         </div>
         <div className="px-3 py-2.5 rounded-lg bg-gradient-to-r from-ove-soft to-white border border-ove-border/80 flex items-start space-x-2.5">

@@ -26,3 +26,24 @@ export function requireRole(roles) {
   };
 }
 
+/**
+ * Enforces Super Admin privileges for platform governance routes
+ */
+export function requireSuperAdmin(req, res, next) {
+  if (!req.user) {
+    return next(new AppError('Unauthorized request', 401, 'UNAUTHORIZED'));
+  }
+
+  if (!req.user.isSuperAdmin && req.user.role !== 'super_admin') {
+    return next(
+      new AppError(
+        'Access denied. Platform Super Admin privileges required.',
+        403,
+        'SUPER_ADMIN_FORBIDDEN'
+      )
+    );
+  }
+
+  next();
+}
+

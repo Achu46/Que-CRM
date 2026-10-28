@@ -23,12 +23,23 @@ export async function authenticate(req, res, next) {
     // Dev / Test mock tokens support
     if (isMock || process.env.NODE_ENV === 'test') {
       if (token.startsWith('mock_')) {
-        const role = token.includes('admin') ? 'admin' : 'sales_rep';
+        const isSuperAdmin = token.includes('super_admin');
+        const role = isSuperAdmin
+          ? 'super_admin'
+          : token.includes('admin')
+          ? 'admin'
+          : 'sales_rep';
+
         req.user = {
-          uid: `user_${role}_123`,
-          email: `${role}@ove.com`,
-          name: role === 'admin' ? 'Admin User' : 'Sales Representative',
+          uid: isSuperAdmin ? 'user_super_admin_1' : `user_${role}_123`,
+          email: isSuperAdmin ? 'superadmin@ove.com' : `${role}@ove.com`,
+          name: isSuperAdmin
+            ? 'Platform Super Admin'
+            : role === 'admin'
+            ? 'Admin User'
+            : 'Sales Representative',
           role,
+          isSuperAdmin,
           tenantId: requestedTenantId,
           tenants: [
             { tenantId: 'org_ove_main', name: 'OVE Solutions HQ', role: 'admin' },
@@ -48,6 +59,7 @@ export async function authenticate(req, res, next) {
     
     // Check user role & tenant permissions from claims or Firestore
     let role = decoded.role || 'sales_rep';
+    let isSuperAdmin = Boolean(decoded.isSuperAdmin || role === 'super_admin');
     let name = decoded.name || decoded.email?.split('@')[0] || 'User';
     let tenantId = requestedTenantId;
 
@@ -57,6 +69,7 @@ export async function authenticate(req, res, next) {
         if (userDoc.exists) {
           const userData = userDoc.data();
           role = userData.role || role;
+          isSuperAdmin = Boolean(userData.isSuperAdmin || role === 'super_admin');
           name = userData.name || name;
           tenantId = requestedTenantId || userData.tenantId || 'org_ove_main';
         }
@@ -70,6 +83,7 @@ export async function authenticate(req, res, next) {
       email: decoded.email,
       name,
       role,
+      isSuperAdmin,
       tenantId,
       tenants: [
         { tenantId: 'org_ove_main', name: 'OVE Solutions HQ', role: 'admin' },

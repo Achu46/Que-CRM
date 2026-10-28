@@ -16,6 +16,7 @@ export default function AppShell({
   searchValue,
   onSearchChange,
   onTenantChanged,
+  onOpenOnboarding,
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -30,6 +31,7 @@ export default function AppShell({
         isMobileOpen={isMobileOpen}
         onCloseMobile={() => setIsMobileOpen(false)}
         onTenantChanged={onTenantChanged}
+        onOpenOnboarding={onOpenOnboarding}
       />
 
       {/* Main Content Pane */}

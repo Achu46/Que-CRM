@@ -19,6 +19,8 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import emailRoutes from './routes/email.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import webhookRoutes from './routes/webhook.routes.js';
+import onboardingRoutes from './routes/onboarding.routes.js';
+import superAdminRoutes from './routes/superadmin.routes.js';
 
 const app = express();
 
@@ -57,9 +59,11 @@ app.get('/api/health', (req, res) => {
   );
 });
 
-// Multi-Tenant & Organization Routes
+// Multi-Tenant, Governance & SaaS Onboarding Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/onboarding', onboardingRoutes);
+app.use('/api/super-admin', superAdminRoutes);
 
 // Core CRM Routes (Multi-Tenant Isolated)
 app.use('/api/leads', leadsRoutes);
