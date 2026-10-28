@@ -42,3 +42,4 @@ describe('Auth Middleware & /api/auth/me', () => {
     expect(res.body.data.role).toBe('admin');
   });
 });
+

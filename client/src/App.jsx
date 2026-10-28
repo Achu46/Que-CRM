@@ -1,220 +1,318 @@
 import React, { useState, useEffect } from 'react';
+import AppShell from './components/layout/AppShell';
+import LeadsPage from './pages/LeadsPage';
+import DealsKanbanPage from './pages/DealsKanbanPage';
+import ContactsPage from './pages/ContactsPage';
+import ContactDetailPage from './pages/ContactDetailPage';
+import CompaniesPage from './pages/CompaniesPage';
+import TasksPage from './pages/TasksPage';
+import Card from './components/common/Card';
+import Badge, { StageBadge } from './components/common/Badge';
+import Button from './components/common/Button';
+import LoadingSpinner from './components/common/LoadingSpinner';
+import ActivityStream from './components/timeline/ActivityStream';
 import { 
-  Sparkles, 
-  Send, 
-  Workflow, 
-  Database, 
-  Activity, 
-  CheckCircle2, 
-  XCircle, 
-  RefreshCw,
-  Users,
-  DollarSign,
-  TrendingUp,
-  ShieldCheck
+  Users, 
+  DollarSign, 
+  TrendingUp, 
+  CheckSquare, 
+  Plus, 
+  ArrowRight, 
+  Sparkles,
+  KanbanSquare
 } from 'lucide-react';
-import api from './api/client.js';
+
+import { leadsApi } from './api/leads.api.js';
+import { dealsApi } from './api/deals.api.js';
+import { tasksApi, activitiesApi } from './api/tasks.api.js';
 
 export default function App() {
-  const [health, setHealth] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [currentPath, setCurrentPath] = useState('/dashboard');
+  const [selectedContactId, setSelectedContactId] = useState('cont_1');
+  const [user, setUser] = useState({
+    name: 'Sarah Chen',
+    email: 'sarah.chen@ove.com',
+    role: 'admin',
+  });
 
-  const checkHealth = async () => {
-    setLoading(true);
-    setError(null);
+  // Dashboard Data State
+  const [dashboardData, setDashboardData] = useState({
+    totalLeads: 0,
+    openDeals: 0,
+    pipelineValue: 0,
+    winRate: 0,
+    deals: [],
+    tasks: [],
+    activities: [],
+  });
+  const [dashLoading, setDashLoading] = useState(true);
+
+  const loadDashboardMetrics = async () => {
+    setDashLoading(true);
     try {
-      const res = await api.get('/health');
-      setHealth(res.data);
+      const [leadsRes, dealsRes, tasksRes, actRes] = await Promise.all([
+        leadsApi.getAll(),
+        dealsApi.getAll(),
+        tasksApi.getAll({ status: 'pending' }),
+        activitiesApi.getAll(),
+      ]);
+
+      const leads = leadsRes.data || [];
+      const deals = dealsRes.data || [];
+      const tasks = tasksRes.data || [];
+      const activities = actRes.data || [];
+
+      const openDeals = deals.filter((d) => d.stage !== '6_won' && d.stage !== '7_lost');
+      const wonDeals = deals.filter((d) => d.stage === '6_won');
+      const closedDeals = deals.filter((d) => d.stage === '6_won' || d.stage === '7_lost');
+      const winRate = closedDeals.length > 0 ? ((wonDeals.length / closedDeals.length) * 100).toFixed(1) : 0;
+      const pipelineValue = openDeals.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+
+      setDashboardData({
+        totalLeads: leads.length,
+        openDeals: openDeals.length,
+        pipelineValue,
+        winRate,
+        deals,
+        tasks,
+        activities: activities.slice(0, 6),
+      });
     } catch (err) {
-      setError(err.message || 'Failed to connect to backend API');
+      console.error('Failed to load dashboard metrics:', err);
     } finally {
-      setLoading(false);
+      setDashLoading(false);
     }
   };
 
   useEffect(() => {
-    checkHealth();
-  }, []);
+    if (currentPath === '/dashboard') {
+      loadDashboardMetrics();
+    }
+  }, [currentPath]);
+
+  const handleSelectContact = (id) => {
+    setSelectedContactId(id);
+    setCurrentPath('/contact-detail');
+  };
+
+  const getPageTitle = () => {
+    switch (currentPath) {
+      case '/dashboard':
+        return 'Executive Dashboard';
+      case '/leads':
+        return 'Leads & Inbound Inquiries';
+      case '/deals':
+        return 'Sales Pipeline & Kanban';
+      case '/contacts':
+        return 'Customer Contacts';
+      case '/contact-detail':
+        return 'Customer Profile Hub';
+      case '/companies':
+        return 'Accounts & Organizations';
+      case '/tasks':
+        return 'Tasks & Reminders';
+      default:
+        return 'Dashboard';
+    }
+  };
+
+  const renderCurrentView = () => {
+    switch (currentPath) {
+      case '/leads':
+        return <LeadsPage onNavigateToContact={handleSelectContact} />;
+      case '/deals':
+        return <DealsKanbanPage />;
+      case '/contacts':
+        return <ContactsPage onSelectContact={handleSelectContact} />;
+      case '/contact-detail':
+        return (
+          <ContactDetailPage
+            contactId={selectedContactId}
+            onBack={() => setCurrentPath('/contacts')}
+          />
+        );
+      case '/companies':
+        return <CompaniesPage />;
+      case '/tasks':
+        return <TasksPage />;
+      case '/dashboard':
+      default:
+        return (
+          <div className="space-y-6">
+            {/* Top Welcome Banner */}
+            <div className="bg-gradient-to-r from-ove-forest via-[#364e30] to-ove-primary rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-white/80">
+                  OVE Solutions • People • Process • Progress
+                </span>
+                <h2 className="text-2xl font-bold mt-1 tracking-tight">
+                  Welcome back, {user.name}
+                </h2>
+                <p className="text-xs text-white/90 mt-1 max-w-xl">
+                  Real-time pipeline visibility, customer interaction memory, and AI-accelerated sales workflows.
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="!text-ove-forest !border-white/30"
+                  icon={KanbanSquare}
+                  onClick={() => setCurrentPath('/deals')}
+                >
+                  View Pipeline
+                </Button>
+                <Button
+                  size="sm"
+                  variant="olive"
+                  icon={Plus}
+                  onClick={() => setCurrentPath('/leads')}
+                >
+                  New Lead
+                </Button>
+              </div>
+            </div>
+
+            {/* Live KPI Metric Cards */}
+            {dashLoading ? (
+              <LoadingSpinner message="Calculating live CRM metrics..." />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="!p-5 border-l-4 border-l-ove-forest">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
+                      Total Inbound Leads
+                    </span>
+                    <div className="p-2 rounded-lg bg-ove-soft text-ove-forest">
+                      <Users className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-baseline space-x-2">
+                    <span className="text-2xl font-bold text-ove-text">
+                      {dashboardData.totalLeads}
+                    </span>
+                    <span className="text-xs text-ove-success font-medium">Live sync</span>
+                  </div>
+                </Card>
+
+                <Card className="!p-5 border-l-4 border-l-ove-primary">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
+                      Active Pipeline Value
+                    </span>
+                    <div className="p-2 rounded-lg bg-ove-soft text-ove-primary">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-baseline space-x-2">
+                    <span className="text-2xl font-bold text-ove-forest">
+                      ${dashboardData.pipelineValue.toLocaleString()}
+                    </span>
+                  </div>
+                </Card>
+
+                <Card className="!p-5 border-l-4 border-l-[#2C5282]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
+                      Open Deals
+                    </span>
+                    <div className="p-2 rounded-lg bg-ove-soft text-[#2C5282]">
+                      <KanbanSquare className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-baseline space-x-2">
+                    <span className="text-2xl font-bold text-ove-text">
+                      {dashboardData.openDeals}
+                    </span>
+                    <span className="text-xs text-ove-muted">In pipeline</span>
+                  </div>
+                </Card>
+
+                <Card className="!p-5 border-l-4 border-l-ove-success">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
+                      Win Rate %
+                    </span>
+                    <div className="p-2 rounded-lg bg-ove-soft text-ove-success">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-baseline space-x-2">
+                    <span className="text-2xl font-bold text-ove-success">
+                      {dashboardData.winRate}%
+                    </span>
+                    <span className="text-xs text-ove-muted">Closed deals</span>
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {/* Split Section: Upcoming Tasks & Recent Activities */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Upcoming Follow-ups */}
+              <Card
+                title="Pending Follow-up Tasks"
+                subtitle="High priority touchpoints scheduled for closing"
+                action={
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setCurrentPath('/tasks')}
+                  >
+                    View All
+                  </Button>
+                }
+              >
+                {dashboardData.tasks.length === 0 ? (
+                  <p className="text-xs text-ove-muted py-6 text-center">
+                    All tasks completed! Great work.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {dashboardData.tasks.slice(0, 4).map((task) => (
+                      <div
+                        key={task.id}
+                        className="p-3 rounded-lg border border-ove-border flex items-center justify-between bg-white hover:border-ove-forest/40 transition-colors"
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <CheckSquare className="w-4 h-4 text-ove-primary flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-semibold text-ove-text">{task.title}</p>
+                            <p className="text-[10px] text-ove-muted">
+                              Due: {new Date(task.dueDate).toLocaleDateString()} • {task.entityTitle || 'CRM Record'}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-ove-soft border border-ove-border text-ove-muted">
+                          {task.priority}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              {/* Recent Activity Feed */}
+              <Card
+                title="Recent Customer Activities"
+                subtitle="Audit stream of calls, notes, and deal progressions"
+              >
+                <ActivityStream activities={dashboardData.activities} />
+              </Card>
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Top Navigation */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-brand-500 flex items-center justify-center text-white font-bold shadow-md shadow-brand-500/20">
-              Q
-            </div>
-            <div>
-              <span className="font-bold text-lg text-slate-900 tracking-tight">Que-CRM</span>
-              <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-brand-50 text-brand-700 rounded-full border border-brand-200">
-                Phase 1 Scaffolding
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-              <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">Backend API:</span>
-              {loading ? (
-                <span className="inline-flex items-center text-amber-600 font-medium">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1" /> Connecting...
-                </span>
-              ) : health ? (
-                <span className="inline-flex items-center text-emerald-600 font-semibold">
-                  <CheckCircle2 className="w-4 h-4 mr-1 text-emerald-500" /> Operational
-                </span>
-              ) : (
-                <span className="inline-flex items-center text-rose-600 font-semibold">
-                  <XCircle className="w-4 h-4 mr-1 text-rose-500" /> Offline
-                </span>
-              )}
-            </div>
-            <button
-              onClick={checkHealth}
-              disabled={loading}
-              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-              title="Refresh connection status"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Hero Card */}
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-brand-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
-          <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-medium text-brand-200 mb-4">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Next-Generation Intelligent CRM Engine</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              Que-CRM Foundation Initialized
-            </h1>
-            <p className="mt-3 text-slate-300 text-base sm:text-lg leading-relaxed">
-              Clean architecture setup with Node.js/Express, React, Firebase Firestore, Google Gemini AI, Resend, and n8n automations. Zero secrets exposed on the client.
-            </p>
-          </div>
-        </div>
-
-        {/* Tech Stack Pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-slate-900">Google Gemini AI</h3>
-            <p className="text-xs text-slate-500 mt-1">Lead enrichment, email drafts & deal sentiment intelligence.</p>
-            <div className="mt-3 flex items-center text-xs font-medium text-blue-600">
-              <span className="w-2 h-2 rounded-full bg-blue-500 mr-1.5"></span> Ready for API Key
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mb-3">
-              <Database className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-slate-900">Firebase Firestore</h3>
-            <p className="text-xs text-slate-500 mt-1">Document store for Leads, Deals, Contacts & Activity Streams.</p>
-            <div className="mt-3 flex items-center text-xs font-medium text-orange-600">
-              <span className="w-2 h-2 rounded-full bg-orange-500 mr-1.5"></span> Admin SDK Wired
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
-              <Send className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-slate-900">Resend Email</h3>
-            <p className="text-xs text-slate-500 mt-1">One-to-one outreach and email delivery/click webhooks.</p>
-            <div className="mt-3 flex items-center text-xs font-medium text-purple-600">
-              <span className="w-2 h-2 rounded-full bg-purple-500 mr-1.5"></span> Client Configured
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
-              <Workflow className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-slate-900">n8n Automations</h3>
-            <p className="text-xs text-slate-500 mt-1">Event-driven webhooks for notifications and integrations.</p>
-            <div className="mt-3 flex items-center text-xs font-medium text-emerald-600">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span> Dispatcher Ready
-            </div>
-          </div>
-        </div>
-
-        {/* Backend Connectivity Status Box */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">System Diagnostics & Environment</h2>
-              <p className="text-sm text-slate-500">Live communication test between React frontend and Express server</p>
-            </div>
-            <div className="flex items-center text-xs text-slate-500 font-mono">
-              <ShieldCheck className="w-4 h-4 mr-1 text-emerald-600" />
-              Secrets Guarded
-            </div>
-          </div>
-
-          <div className="mt-4">
-            {loading && (
-              <div className="py-6 flex items-center justify-center text-slate-500 space-x-2">
-                <RefreshCw className="w-5 h-5 animate-spin text-brand-600" />
-                <span className="text-sm">Pinging Express backend at /api/health...</span>
-              </div>
-            )}
-
-            {error && (
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 text-sm">
-                <p className="font-semibold flex items-center">
-                  <XCircle className="w-4 h-4 mr-1.5" /> Unable to reach Express server
-                </p>
-                <p className="mt-1 text-xs text-rose-700">{error}</p>
-                <p className="mt-2 text-xs text-slate-600">
-                  Ensure the backend is running with <code className="bg-rose-100 px-1 py-0.5 rounded font-mono">npm run dev:server</code>.
-                </p>
-              </div>
-            )}
-
-            {health && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <span className="text-xs text-slate-500 block">Service Name</span>
-                    <span className="font-semibold text-slate-900">{health.service}</span>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <span className="text-xs text-slate-500 block">Server Environment</span>
-                    <span className="font-semibold text-slate-900 uppercase font-mono">{health.env}</span>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <span className="text-xs text-slate-500 block">Last Responded</span>
-                    <span className="font-semibold text-slate-900 font-mono text-xs">{new Date(health.timestamp).toLocaleTimeString()}</span>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs flex items-center">
-                  <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600 shrink-0" />
-                  <span>Frontend and Backend API bridge verified. Ready to proceed to <strong>Phase 2: Database & Core CRM REST APIs</strong>.</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
-          Que-CRM Project • Clean Architecture Foundation
-        </div>
-      </footer>
-    </div>
+    <AppShell
+      currentPath={currentPath}
+      onNavigate={(path) => setCurrentPath(path)}
+      title={getPageTitle()}
+      user={user}
+    >
+      {renderCurrentView()}
+    </AppShell>
   );
 }
-

@@ -9,3 +9,4 @@ router.get('/me', authenticate, getMe);
 router.post('/sync', authenticate, syncUser);
 
 export default router;
+

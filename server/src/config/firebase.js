@@ -40,3 +40,4 @@ try {
 }
 
 export { admin, db, auth, isMock };
+

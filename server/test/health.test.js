@@ -22,3 +22,4 @@ describe('GET /api/health', () => {
     expect(res.body.error.code).toBe('NOT_FOUND');
   });
 });
+

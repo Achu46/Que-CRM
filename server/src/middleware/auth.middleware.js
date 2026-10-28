@@ -70,3 +70,4 @@ export async function authenticate(req, res, next) {
     return next(new AppError('Invalid or expired authentication token', 401, 'INVALID_TOKEN', error.message));
   }
 }
+

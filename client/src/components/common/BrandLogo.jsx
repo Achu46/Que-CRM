@@ -47,3 +47,4 @@ export default function BrandLogo({ size = 'md', showTagline = true, className =
     </div>
   );
 }
+

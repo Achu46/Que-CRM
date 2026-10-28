@@ -49,3 +49,4 @@ export async function syncUser(req, res, next) {
     next(error);
   }
 }
+

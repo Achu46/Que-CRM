@@ -79,3 +79,4 @@ export function PriorityBadge({ priority }) {
   const current = priorityMap[priority?.toLowerCase()] || { label: priority, variant: 'default' };
   return <Badge variant={current.variant}>{current.label}</Badge>;
 }
+

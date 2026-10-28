@@ -23,3 +23,4 @@ export function sendError(res, code = 'ERROR', message = 'An error occurred', st
   };
   return res.status(statusCode).json(payload);
 }
+

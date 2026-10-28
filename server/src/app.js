@@ -5,7 +5,15 @@ import morgan from 'morgan';
 import { env } from './config/env.js';
 import { errorHandler, AppError } from './middleware/error.middleware.js';
 import { sendSuccess } from './utils/response.js';
+
+// Route imports
 import authRoutes from './routes/auth.routes.js';
+import leadsRoutes from './routes/leads.routes.js';
+import dealsRoutes from './routes/deals.routes.js';
+import contactsRoutes from './routes/contacts.routes.js';
+import companiesRoutes from './routes/companies.routes.js';
+import tasksRoutes from './routes/tasks.routes.js';
+import activitiesRoutes from './routes/activities.routes.js';
 
 const app = express();
 
@@ -46,6 +54,12 @@ app.get('/api/health', (req, res) => {
 
 // Feature Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/leads', leadsRoutes);
+app.use('/api/deals', dealsRoutes);
+app.use('/api/contacts', contactsRoutes);
+app.use('/api/companies', companiesRoutes);
+app.use('/api/tasks', tasksRoutes);
+app.use('/api/activities', activitiesRoutes);
 
 // 404 handler
 app.use((req, res, next) => {
