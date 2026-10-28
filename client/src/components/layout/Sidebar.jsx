@@ -12,6 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import BrandLogo from '../common/BrandLogo';
+import TenantSwitcher from './TenantSwitcher';
 
 export default function Sidebar({
   currentPath = '/dashboard',
@@ -20,6 +21,7 @@ export default function Sidebar({
   onLogout,
   isMobileOpen = false,
   onCloseMobile,
+  onTenantChanged,
 }) {
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -37,9 +39,10 @@ export default function Sidebar({
 
   const sidebarContent = (
     <aside className="w-64 h-full bg-white border-r border-ove-border flex flex-col justify-between select-none">
-      {/* Top Branding Header */}
-      <div className="p-5 border-b border-ove-border">
+      {/* Top Branding & Multi-Tenant Switcher */}
+      <div className="p-4 border-b border-ove-border space-y-3.5">
         <BrandLogo size="md" showTagline={true} />
+        <TenantSwitcher onTenantChanged={onTenantChanged} />
       </div>
 
       {/* Main Nav Links */}
@@ -76,13 +79,13 @@ export default function Sidebar({
         })}
 
         <div className="pt-6 px-3 pb-2 text-[11px] font-semibold tracking-wider text-ove-muted uppercase">
-          AI & Automation
+          AI & Multi-Tenant Engine
         </div>
         <div className="px-3 py-2.5 rounded-lg bg-gradient-to-r from-ove-soft to-white border border-ove-border/80 flex items-start space-x-2.5">
           <Sparkles className="w-4 h-4 text-ove-primary mt-0.5 flex-shrink-0" />
           <div className="text-xs">
-            <span className="font-semibold text-ove-forest block">Gemini 2.0 Ready</span>
-            <span className="text-[11px] text-ove-muted">Assisting email drafts & interaction memory.</span>
+            <span className="font-semibold text-ove-forest block">Multi-Tenant Ready</span>
+            <span className="text-[11px] text-ove-muted">Data strictly scoped by tenant organization.</span>
           </div>
         </div>
       </div>
@@ -139,4 +142,3 @@ export default function Sidebar({
     </>
   );
 }
-

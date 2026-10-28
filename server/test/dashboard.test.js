@@ -36,3 +36,4 @@ describe('Dashboard & Analytics API', () => {
     expect(Array.isArray(recentActivities)).toBe(true);
   });
 });
+

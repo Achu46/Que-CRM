@@ -7,13 +7,17 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to attach Firebase Auth token if present
+// Request interceptor to attach Firebase Auth token & Multi-Tenant Organization header
 api.interceptors.request.use(
   async (config) => {
-    const token = localStorage.getItem('crm_auth_token');
+    const token = localStorage.getItem('crm_auth_token') || 'mock_admin_token';
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    const tenantId = localStorage.getItem('crm_active_tenant_id') || 'org_ove_main';
+    config.headers['x-tenant-id'] = tenantId;
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -34,4 +38,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-

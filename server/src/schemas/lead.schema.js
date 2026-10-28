@@ -21,3 +21,18 @@ export const convertLeadSchema = z.object({
   expectedCloseDate: z.string().optional(),
 });
 
+export const bulkImportRowSchema = z.object({
+  firstName: z.string().trim().min(1, 'First name is required'),
+  lastName: z.string().trim().optional().default(''),
+  email: z.string().trim().email('Valid email is required'),
+  phone: z.string().trim().optional().default(''),
+  companyName: z.string().trim().optional().default(''),
+  source: z.string().trim().optional().default('website'),
+  status: z.enum(['new', 'contacted', 'qualified', 'disqualified']).default('new'),
+  notes: z.string().trim().optional().default(''),
+});
+
+export const bulkImportSchema = z.object({
+  leads: z.array(bulkImportRowSchema).min(1, 'At least one lead row must be provided').max(1000, 'Batch limit is 1,000 leads per import'),
+  skipDuplicates: z.boolean().default(true),
+});

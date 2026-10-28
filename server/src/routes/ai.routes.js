@@ -19,3 +19,4 @@ router.post('/draft-email', validate(draftEmailSchema), draftEmail);
 router.post('/extract-lead', validate(extractLeadSchema), extractLead);
 
 export default router;
+

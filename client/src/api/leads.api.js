@@ -13,6 +13,10 @@ export const leadsApi = {
     const res = await api.post('/leads', data);
     return res.data;
   },
+  bulkImport: async (payload) => {
+    const res = await api.post('/leads/bulk-import', payload);
+    return res.data;
+  },
   update: async (id, data) => {
     const res = await api.put(`/leads/${id}`, data);
     return res.data;
@@ -26,4 +30,3 @@ export const leadsApi = {
     return res.data;
   },
 };
-

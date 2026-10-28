@@ -84,3 +84,4 @@ export default function AISummaryCard({ contactName, entityType = 'contact', ent
     </div>
   );
 }
+

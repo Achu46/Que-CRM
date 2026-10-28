@@ -3,15 +3,17 @@ import { sendSuccess } from '../utils/response.js';
 
 /**
  * Returns comprehensive, live database aggregates for the Executive Dashboard
- * No hardcoded metrics: all values calculated directly from current Firestore records.
+ * Multi-tenant: metrics strictly isolated to the requesting user's tenantId.
  */
 export async function getDashboardMetrics(req, res, next) {
   try {
+    const tenantId = req.user.tenantId;
+
     const [allLeads, allDeals, allTasks, allActivities] = await Promise.all([
-      store.list('leads', (l) => !l.isArchived),
-      store.list('deals'),
-      store.list('tasks'),
-      store.list('activities'),
+      store.list('leads', (l) => !l.isArchived, tenantId),
+      store.list('deals', null, tenantId),
+      store.list('tasks', null, tenantId),
+      store.list('activities', null, tenantId),
     ]);
 
     // 1. Lead Metrics
@@ -28,13 +30,11 @@ export async function getDashboardMetrics(req, res, next) {
     const totalPipelineValue = openDeals.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
     const wonRevenue = wonDeals.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
 
-    // Conversion rate: won deals / total decided deals (won + lost)
     const decidedDealsCount = wonDeals.length + lostDeals.length;
     const winRatePercent = decidedDealsCount > 0
       ? Number(((wonDeals.length / decidedDealsCount) * 100).toFixed(1))
       : 0;
 
-    // Lead-to-Deal Conversion Rate
     const leadConversionRatePercent = totalLeads > 0
       ? Number(((convertedLeads / totalLeads) * 100).toFixed(1))
       : 0;
@@ -84,6 +84,7 @@ export async function getDashboardMetrics(req, res, next) {
     const recentActivities = allActivities.slice(0, 8);
 
     const metrics = {
+      tenantId,
       summary: {
         totalLeads,
         newLeads,

@@ -67,3 +67,4 @@ export async function extractLead(req, res, next) {
     next(error);
   }
 }
+

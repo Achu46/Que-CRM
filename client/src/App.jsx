@@ -30,6 +30,9 @@ import { dashboardApi } from './api/integrations.api.js';
 export default function App() {
   const [currentPath, setCurrentPath] = useState('/dashboard');
   const [selectedContactId, setSelectedContactId] = useState('cont_1');
+  const [activeTenantId, setActiveTenantId] = useState(
+    localStorage.getItem('crm_active_tenant_id') || 'org_ove_main'
+  );
   const [user, setUser] = useState({
     name: 'Sarah Chen',
     email: 'sarah.chen@ove.com',
@@ -56,7 +59,7 @@ export default function App() {
     if (currentPath === '/dashboard') {
       loadDashboardMetrics();
     }
-  }, [currentPath]);
+  }, [currentPath, activeTenantId]);
 
   const handleSelectContact = (id) => {
     setSelectedContactId(id);
@@ -397,8 +400,14 @@ export default function App() {
       onNavigate={(path) => setCurrentPath(path)}
       title={getPageTitle()}
       user={user}
+      onTenantChanged={(newTenantId) => {
+        setActiveTenantId(newTenantId);
+        loadDashboardMetrics();
+      }}
     >
-      {renderCurrentView()}
+      <div key={activeTenantId}>
+        {renderCurrentView()}
+      </div>
     </AppShell>
   );
 }

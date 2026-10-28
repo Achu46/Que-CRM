@@ -5,6 +5,7 @@ import { AppError } from '../middleware/error.middleware.js';
 export async function getTasks(req, res, next) {
   try {
     const { status, priority, entityType, entityId } = req.query;
+    const tenantId = req.user.tenantId;
 
     const tasks = await store.list('tasks', (task) => {
       if (status && status !== 'all' && task.status !== status) return false;
@@ -12,12 +13,11 @@ export async function getTasks(req, res, next) {
       if (entityType && task.entityType !== entityType) return false;
       if (entityId && task.entityId !== entityId) return false;
       return true;
-    });
+    }, tenantId);
 
-    // Sort by dueDate ascending
     tasks.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-    return sendSuccess(res, tasks, 'Tasks retrieved successfully', 200, { total: tasks.length });
+    return sendSuccess(res, tasks, 'Tasks retrieved successfully', 200, { total: tasks.length, tenantId });
   } catch (error) {
     next(error);
   }
@@ -26,12 +26,13 @@ export async function getTasks(req, res, next) {
 export async function createTask(req, res, next) {
   try {
     const data = req.body;
+    const tenantId = req.user.tenantId;
 
     const task = await store.create('tasks', {
       ...data,
       status: 'pending',
       assignedTo: data.assignedTo || req.user.uid,
-    });
+    }, tenantId);
 
     return sendSuccess(res, task, 'Task created successfully', 201);
   } catch (error) {
@@ -42,7 +43,9 @@ export async function createTask(req, res, next) {
 export async function completeTask(req, res, next) {
   try {
     const { id } = req.params;
-    const existing = await store.getById('tasks', id);
+    const tenantId = req.user.tenantId;
+
+    const existing = await store.getById('tasks', id, tenantId);
     if (!existing) {
       throw new AppError('Task not found', 404, 'NOT_FOUND');
     }
@@ -50,9 +53,8 @@ export async function completeTask(req, res, next) {
     const updated = await store.update('tasks', id, {
       status: 'completed',
       completedAt: new Date().toISOString(),
-    });
+    }, tenantId);
 
-    // Log completion activity on entity
     await store.create('activities', {
       entityType: existing.entityType,
       entityId: existing.entityId,
@@ -61,11 +63,10 @@ export async function completeTask(req, res, next) {
       content: `Completed task: "${existing.title}".`,
       performedBy: req.user.uid,
       performedByName: req.user.name,
-    });
+    }, tenantId);
 
     return sendSuccess(res, updated, 'Task marked as completed');
   } catch (error) {
     next(error);
   }
 }
-

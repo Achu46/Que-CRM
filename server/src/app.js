@@ -8,6 +8,7 @@ import { sendSuccess } from './utils/response.js';
 
 // Route imports
 import authRoutes from './routes/auth.routes.js';
+import organizationRoutes from './routes/organizations.routes.js';
 import leadsRoutes from './routes/leads.routes.js';
 import dealsRoutes from './routes/deals.routes.js';
 import contactsRoutes from './routes/contacts.routes.js';
@@ -56,8 +57,11 @@ app.get('/api/health', (req, res) => {
   );
 });
 
-// Core CRM Routes
+// Multi-Tenant & Organization Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/organizations', organizationRoutes);
+
+// Core CRM Routes (Multi-Tenant Isolated)
 app.use('/api/leads', leadsRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/contacts', contactsRoutes);

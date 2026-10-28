@@ -6,12 +6,13 @@ import { AppError } from '../middleware/error.middleware.js';
 export async function getDeals(req, res, next) {
   try {
     const { stage, ownerId } = req.query;
+    const tenantId = req.user.tenantId;
 
     const deals = await store.list('deals', (deal) => {
       if (stage && stage !== 'all' && deal.stage !== stage) return false;
       if (ownerId && deal.ownerId !== ownerId) return false;
       return true;
-    });
+    }, tenantId);
 
     // Calculate pipeline value and stage summary
     const totalPipelineValue = deals
@@ -26,6 +27,7 @@ export async function getDeals(req, res, next) {
       total: deals.length,
       totalPipelineValue,
       wonValue,
+      tenantId,
     });
   } catch (error) {
     next(error);
@@ -35,19 +37,23 @@ export async function getDeals(req, res, next) {
 export async function getDealById(req, res, next) {
   try {
     const { id } = req.params;
-    const deal = await store.getById('deals', id);
+    const tenantId = req.user.tenantId;
+
+    const deal = await store.getById('deals', id, tenantId);
     if (!deal) {
       throw new AppError('Deal not found', 404, 'NOT_FOUND');
     }
 
     const activities = await store.list(
       'activities',
-      (act) => act.entityType === 'deal' && act.entityId === id
+      (act) => act.entityType === 'deal' && act.entityId === id,
+      tenantId
     );
 
     const tasks = await store.list(
       'tasks',
-      (t) => t.entityType === 'deal' && t.entityId === id
+      (t) => t.entityType === 'deal' && t.entityId === id,
+      tenantId
     );
 
     return sendSuccess(res, { ...deal, activities, tasks }, 'Deal details retrieved');
@@ -59,12 +65,13 @@ export async function getDealById(req, res, next) {
 export async function createDeal(req, res, next) {
   try {
     const data = req.body;
+    const tenantId = req.user.tenantId;
 
     const deal = await store.create('deals', {
       ...data,
       ownerId: data.ownerId || req.user.uid,
       stageChangedAt: new Date().toISOString(),
-    });
+    }, tenantId);
 
     await store.create('activities', {
       entityType: 'deal',
@@ -74,7 +81,7 @@ export async function createDeal(req, res, next) {
       content: `Opportunity created with value: $${deal.amount.toLocaleString()} in stage: ${deal.stage}.`,
       performedBy: req.user.uid,
       performedByName: req.user.name,
-    });
+    }, tenantId);
 
     return sendSuccess(res, deal, 'Deal created successfully', 201);
   } catch (error) {
@@ -86,8 +93,9 @@ export async function updateDealStage(req, res, next) {
   try {
     const { id } = req.params;
     const { stage, lostReason, lostNotes } = req.body;
+    const tenantId = req.user.tenantId;
 
-    const existing = await store.getById('deals', id);
+    const existing = await store.getById('deals', id, tenantId);
     if (!existing) {
       throw new AppError('Deal not found', 404, 'NOT_FOUND');
     }
@@ -106,7 +114,7 @@ export async function updateDealStage(req, res, next) {
       }),
     };
 
-    const updated = await store.update('deals', id, updates);
+    const updated = await store.update('deals', id, updates, tenantId);
 
     // Log stage change activity
     await store.create('activities', {
@@ -121,7 +129,7 @@ export async function updateDealStage(req, res, next) {
       performedBy: req.user.uid,
       performedByName: req.user.name,
       metadata: { previousStage, newStage: stage, lostReason },
-    });
+    }, tenantId);
 
     // Outbound automation trigger via n8n
     n8nService.dispatch('deal.stage_changed', {
@@ -141,15 +149,16 @@ export async function updateDealStage(req, res, next) {
 export async function updateDeal(req, res, next) {
   try {
     const { id } = req.params;
-    const existing = await store.getById('deals', id);
+    const tenantId = req.user.tenantId;
+
+    const existing = await store.getById('deals', id, tenantId);
     if (!existing) {
       throw new AppError('Deal not found', 404, 'NOT_FOUND');
     }
 
-    const updated = await store.update('deals', id, req.body);
+    const updated = await store.update('deals', id, req.body, tenantId);
     return sendSuccess(res, updated, 'Deal updated successfully');
   } catch (error) {
     next(error);
   }
 }
-

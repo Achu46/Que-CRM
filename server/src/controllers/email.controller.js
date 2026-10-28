@@ -36,3 +36,4 @@ export async function sendEmail(req, res, next) {
     next(error);
   }
 }
+

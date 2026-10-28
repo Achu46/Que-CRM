@@ -9,7 +9,8 @@ import {
   CheckCircle,
   Building,
   Mail,
-  Phone
+  Phone,
+  Upload
 } from 'lucide-react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -17,6 +18,7 @@ import Badge from '../components/common/Badge';
 import Modal from '../components/common/Modal';
 import { Input, Select, Textarea } from '../components/common/Input';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import BulkImportModal from '../components/leads/BulkImportModal';
 import { leadsApi } from '../api/leads.api.js';
 
 export default function LeadsPage({ onNavigateToContact }) {
@@ -28,6 +30,7 @@ export default function LeadsPage({ onNavigateToContact }) {
   // Modals state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
 
   // Create Form State
@@ -161,13 +164,22 @@ export default function LeadsPage({ onNavigateToContact }) {
             Ingest, qualify, and convert prospects into high-value opportunities.
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={Plus}
-          onClick={() => setIsCreateOpen(true)}
-        >
-          Add New Lead
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="secondary"
+            icon={Upload}
+            onClick={() => setIsBulkImportOpen(true)}
+          >
+            Bulk Import
+          </Button>
+          <Button
+            variant="primary"
+            icon={Plus}
+            onClick={() => setIsCreateOpen(true)}
+          >
+            Add New Lead
+          </Button>
+        </div>
       </div>
 
       {duplicateWarning && (
@@ -436,6 +448,13 @@ export default function LeadsPage({ onNavigateToContact }) {
           </div>
         </form>
       </Modal>
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onImportSuccess={fetchLeads}
+      />
     </div>
   );
 }

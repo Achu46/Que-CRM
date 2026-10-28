@@ -10,3 +10,4 @@ router.use(authenticate);
 router.post('/send', validate(sendEmailSchema), sendEmail);
 
 export default router;
+

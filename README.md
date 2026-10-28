@@ -2,23 +2,26 @@
 > **Tagline:** People • Process • Progress  
 > Built for QUE Solutions | Modern, secure, AI-assisted Customer Relationship Management
 
-[![Vitest](https://img.shields.io/badge/Vitest-29%20Passing-brightgreen.svg)](file:///c:/Users/ADMIN/Desktop/Que-CRM/server)
+[![Vitest](https://img.shields.io/badge/Vitest-35%20Passing-brightgreen.svg)](file:///c:/Users/ADMIN/Desktop/Que-CRM/server)
 [![React](https://img.shields.io/badge/React-18-blue.svg)](file:///c:/Users/ADMIN/Desktop/Que-CRM/client)
+[![Multi--Tenant](https://img.shields.io/badge/Multi--Tenant-Isolated-emerald.svg)](file:///c:/Users/ADMIN/Desktop/Que-CRM/server)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-OVE%20Theme-olive.svg)](file:///c:/Users/ADMIN/Desktop/Que-CRM/client/tailwind.config.js)
 
 ---
 
 ## 1. Overview & Architecture
 
-OVE Solutions CRM is an enterprise-minded CRM platform designed around **Option B: Backend-as-Single-Source-of-Truth**. All client requests travel through the Express API server with Zod schema validation, Firebase ID token authentication, RBAC authorization, and centralized error handling.
+OVE Solutions CRM is an enterprise-minded, multi-tenant CRM platform designed around **Option B: Backend-as-Single-Source-of-Truth**. All client requests travel through the Express API server with Zod schema validation, Firebase ID token authentication, multi-tenant boundary enforcement, and centralized error handling.
 
 ### Key Pillars
-1. **Activity-Driven Sales Acceleration**: Every contact and deal maintains a unified chronological timeline (calls, meetings, notes, emails).
-2. **Atomic Lead Qualification**: Inbound inquiries convert into a Company, Contact, and a Deal in the `2_qualified` pipeline stage in a single transaction.
-3. **7-Stage Kanban Deals Pipeline**: Drag/move opportunities with stage totals, velocity tracking, and mandatory reason capture on Closed Lost.
-4. **Resend Email Integration**: Send customer emails directly from the contact profile with full delivery tracking and timeline logging.
-5. **Gemini AI Intelligence**: Contextual interaction summarization, personalized follow-up email drafts, and unstructured lead entity extraction with human-in-the-loop approval.
-6. **n8n Automation Engine**: Outbound event webhook dispatching (`lead.created`, `deal.stage_changed`) and authenticated inbound lead ingestion.
+1. **Multi-Tenant Architecture**: Complete logical data isolation across distinct tenant organizations (`tenantId`). Data queries, mutations, analytics, and automations strictly filter by active organization with an instantaneous UI switcher and new organization provisioning.
+2. **Bulk Lead Import Engine**: Ingest hundreds of leads via CSV upload or raw paste with client-side syntax preview, row validation, template downloads, and intelligent duplicate deduplication.
+3. **Activity-Driven Sales Acceleration**: Every contact and deal maintains a unified chronological timeline (calls, meetings, notes, emails).
+4. **Atomic Lead Qualification**: Inbound inquiries convert into a Company, Contact, and a Deal in the `2_qualified` pipeline stage in a single transaction.
+5. **7-Stage Kanban Deals Pipeline**: Drag/move opportunities with stage totals, velocity tracking, and mandatory reason capture on Closed Lost.
+6. **Resend Email Integration**: Send customer emails directly from the contact profile with full delivery tracking and timeline logging.
+7. **Gemini AI Intelligence**: Contextual interaction summarization, personalized follow-up email drafts, and unstructured lead entity extraction with human-in-the-loop approval.
+8. **n8n Automation Engine**: Outbound event webhook dispatching (`lead.created`, `deal.stage_changed`) and authenticated inbound lead ingestion.
 
 ---
 
@@ -51,13 +54,19 @@ The platform strictly implements the minimal olive and forest green aesthetic:
 
 All endpoints return a standardized envelope: `{ success: true, data: ..., message: ..., meta: ... }`.
 
+### Multi-Tenancy & Organizations
+* `GET /api/organizations/my-orgs` — List organizations available to current user.
+* `GET /api/organizations/current` — Active organization profile.
+* `POST /api/organizations` — Provision a new tenant organization.
+
 ### Authentication
 * `GET /api/auth/me` — Current user profile and resolved RBAC role.
 * `POST /api/auth/sync` — Ensures user profile in Firestore after Firebase Auth login.
 
 ### Leads
-* `GET /api/leads` — Query leads with status, source, and search filters.
+* `GET /api/leads` — Query leads with status, source, and search filters (tenant-scoped).
 * `POST /api/leads` — Create lead with duplicate warning detection.
+* `POST /api/leads/bulk-import` — Batch import leads from CSV/JSON with duplicate skipping.
 * `GET /api/leads/:id` — Lead details with associated timeline.
 * `PUT /api/leads/:id` — Update lead fields.
 * `DELETE /api/leads/:id` — Archive lead (admin role required).
