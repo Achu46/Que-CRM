@@ -1,4 +1,5 @@
 import { store } from '../services/store.service.js';
+import { n8nService } from '../services/n8n.service.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { AppError } from '../middleware/error.middleware.js';
 
@@ -82,6 +83,9 @@ export async function createLead(req, res, next) {
       performedBy: req.user.uid,
       performedByName: req.user.name,
     });
+
+    // Outbound automation trigger via n8n
+    n8nService.dispatch('lead.created', newLead);
 
     return sendSuccess(
       res,
@@ -214,3 +218,4 @@ export async function convertLead(req, res, next) {
     next(error);
   }
 }
+

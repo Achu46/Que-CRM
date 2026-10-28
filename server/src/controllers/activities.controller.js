@@ -36,3 +36,4 @@ export async function createActivity(req, res, next) {
     next(error);
   }
 }
+

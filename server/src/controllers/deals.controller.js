@@ -1,4 +1,5 @@
 import { store } from '../services/store.service.js';
+import { n8nService } from '../services/n8n.service.js';
 import { sendSuccess } from '../utils/response.js';
 import { AppError } from '../middleware/error.middleware.js';
 
@@ -122,6 +123,15 @@ export async function updateDealStage(req, res, next) {
       metadata: { previousStage, newStage: stage, lostReason },
     });
 
+    // Outbound automation trigger via n8n
+    n8nService.dispatch('deal.stage_changed', {
+      dealId: id,
+      previousStage,
+      newStage: stage,
+      amount: updated.amount,
+      title: updated.title,
+    });
+
     return sendSuccess(res, updated, 'Deal stage updated successfully');
   } catch (error) {
     next(error);
@@ -142,3 +152,4 @@ export async function updateDeal(req, res, next) {
     next(error);
   }
 }
+

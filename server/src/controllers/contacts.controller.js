@@ -90,3 +90,4 @@ export async function updateContact(req, res, next) {
     next(error);
   }
 }
+

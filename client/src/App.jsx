@@ -17,14 +17,15 @@ import {
   TrendingUp, 
   CheckSquare, 
   Plus, 
-  ArrowRight, 
   Sparkles,
-  KanbanSquare
+  KanbanSquare,
+  BarChart3,
+  PieChart,
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 
-import { leadsApi } from './api/leads.api.js';
-import { dealsApi } from './api/deals.api.js';
-import { tasksApi, activitiesApi } from './api/tasks.api.js';
+import { dashboardApi } from './api/integrations.api.js';
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState('/dashboard');
@@ -36,47 +37,14 @@ export default function App() {
   });
 
   // Dashboard Data State
-  const [dashboardData, setDashboardData] = useState({
-    totalLeads: 0,
-    openDeals: 0,
-    pipelineValue: 0,
-    winRate: 0,
-    deals: [],
-    tasks: [],
-    activities: [],
-  });
+  const [metrics, setMetrics] = useState(null);
   const [dashLoading, setDashLoading] = useState(true);
 
   const loadDashboardMetrics = async () => {
     setDashLoading(true);
     try {
-      const [leadsRes, dealsRes, tasksRes, actRes] = await Promise.all([
-        leadsApi.getAll(),
-        dealsApi.getAll(),
-        tasksApi.getAll({ status: 'pending' }),
-        activitiesApi.getAll(),
-      ]);
-
-      const leads = leadsRes.data || [];
-      const deals = dealsRes.data || [];
-      const tasks = tasksRes.data || [];
-      const activities = actRes.data || [];
-
-      const openDeals = deals.filter((d) => d.stage !== '6_won' && d.stage !== '7_lost');
-      const wonDeals = deals.filter((d) => d.stage === '6_won');
-      const closedDeals = deals.filter((d) => d.stage === '6_won' || d.stage === '7_lost');
-      const winRate = closedDeals.length > 0 ? ((wonDeals.length / closedDeals.length) * 100).toFixed(1) : 0;
-      const pipelineValue = openDeals.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
-
-      setDashboardData({
-        totalLeads: leads.length,
-        openDeals: openDeals.length,
-        pipelineValue,
-        winRate,
-        deals,
-        tasks,
-        activities: activities.slice(0, 6),
-      });
+      const res = await dashboardApi.getMetrics();
+      setMetrics(res.data);
     } catch (err) {
       console.error('Failed to load dashboard metrics:', err);
     } finally {
@@ -116,6 +84,22 @@ export default function App() {
     }
   };
 
+  const summary = metrics?.summary || {
+    totalLeads: 0,
+    newLeads: 0,
+    qualifiedLeads: 0,
+    openDealsCount: 0,
+    wonDealsCount: 0,
+    lostDealsCount: 0,
+    totalPipelineValue: 0,
+    wonRevenue: 0,
+    winRatePercent: 0,
+    leadConversionRatePercent: 0,
+  };
+
+  const pipelineByStage = metrics?.pipelineByStage || [];
+  const maxStageValue = Math.max(...pipelineByStage.map((s) => s.totalValue || 0), 1);
+
   const renderCurrentView = () => {
     switch (currentPath) {
       case '/leads':
@@ -140,16 +124,16 @@ export default function App() {
         return (
           <div className="space-y-6">
             {/* Top Welcome Banner */}
-            <div className="bg-gradient-to-r from-ove-forest via-[#364e30] to-ove-primary rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-gradient-to-r from-ove-forest via-[#384f33] to-ove-primary rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wider text-white/80">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-white/80">
                   OVE Solutions • People • Process • Progress
                 </span>
                 <h2 className="text-2xl font-bold mt-1 tracking-tight">
                   Welcome back, {user.name}
                 </h2>
                 <p className="text-xs text-white/90 mt-1 max-w-xl">
-                  Real-time pipeline visibility, customer interaction memory, and AI-accelerated sales workflows.
+                  Real-time pipeline visibility, customer interaction memory, Resend email outreach, and Gemini AI assistance.
                 </p>
               </div>
               <div className="flex items-center space-x-2">
@@ -175,131 +159,233 @@ export default function App() {
 
             {/* Live KPI Metric Cards */}
             {dashLoading ? (
-              <LoadingSpinner message="Calculating live CRM metrics..." />
+              <LoadingSpinner message="Calculating live CRM database metrics..." />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="!p-5 border-l-4 border-l-ove-forest">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
-                      Total Inbound Leads
-                    </span>
-                    <div className="p-2 rounded-lg bg-ove-soft text-ove-forest">
-                      <Users className="w-4 h-4" />
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Total Pipeline Value */}
+                  <Card className="!p-5 border-l-4 border-l-ove-forest">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
+                        Active Pipeline Value
+                      </span>
+                      <div className="p-2 rounded-lg bg-ove-soft text-ove-forest">
+                        <DollarSign className="w-4 h-4" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-3 flex items-baseline space-x-2">
-                    <span className="text-2xl font-bold text-ove-text">
-                      {dashboardData.totalLeads}
-                    </span>
-                    <span className="text-xs text-ove-success font-medium">Live sync</span>
-                  </div>
-                </Card>
-
-                <Card className="!p-5 border-l-4 border-l-ove-primary">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
-                      Active Pipeline Value
-                    </span>
-                    <div className="p-2 rounded-lg bg-ove-soft text-ove-primary">
-                      <DollarSign className="w-4 h-4" />
+                    <div className="mt-3 flex items-baseline space-x-2">
+                      <span className="text-2xl font-bold text-ove-forest">
+                        ${summary.totalPipelineValue.toLocaleString()}
+                      </span>
                     </div>
-                  </div>
-                  <div className="mt-3 flex items-baseline space-x-2">
-                    <span className="text-2xl font-bold text-ove-forest">
-                      ${dashboardData.pipelineValue.toLocaleString()}
-                    </span>
-                  </div>
-                </Card>
+                    <p className="text-[11px] text-ove-muted mt-1">
+                      Across {summary.openDealsCount} open opportunities
+                    </p>
+                  </Card>
 
-                <Card className="!p-5 border-l-4 border-l-[#2C5282]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
-                      Open Deals
-                    </span>
-                    <div className="p-2 rounded-lg bg-ove-soft text-[#2C5282]">
-                      <KanbanSquare className="w-4 h-4" />
+                  {/* Win Rate */}
+                  <Card className="!p-5 border-l-4 border-l-ove-success">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
+                        Sales Win Rate
+                      </span>
+                      <div className="p-2 rounded-lg bg-ove-soft text-ove-success">
+                        <TrendingUp className="w-4 h-4" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-3 flex items-baseline space-x-2">
-                    <span className="text-2xl font-bold text-ove-text">
-                      {dashboardData.openDeals}
-                    </span>
-                    <span className="text-xs text-ove-muted">In pipeline</span>
-                  </div>
-                </Card>
-
-                <Card className="!p-5 border-l-4 border-l-ove-success">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
-                      Win Rate %
-                    </span>
-                    <div className="p-2 rounded-lg bg-ove-soft text-ove-success">
-                      <TrendingUp className="w-4 h-4" />
+                    <div className="mt-3 flex items-baseline space-x-2">
+                      <span className="text-2xl font-bold text-ove-success">
+                        {summary.winRatePercent}%
+                      </span>
+                      <span className="text-xs text-ove-muted">
+                        ({summary.wonDealsCount} won / {summary.wonDealsCount + summary.lostDealsCount} closed)
+                      </span>
                     </div>
-                  </div>
-                  <div className="mt-3 flex items-baseline space-x-2">
-                    <span className="text-2xl font-bold text-ove-success">
-                      {dashboardData.winRate}%
-                    </span>
-                    <span className="text-xs text-ove-muted">Closed deals</span>
-                  </div>
-                </Card>
-              </div>
-            )}
+                    <p className="text-[11px] text-ove-muted mt-1">
+                      ${summary.wonRevenue.toLocaleString()} in closed revenue
+                    </p>
+                  </Card>
 
-            {/* Split Section: Upcoming Tasks & Recent Activities */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Upcoming Follow-ups */}
-              <Card
-                title="Pending Follow-up Tasks"
-                subtitle="High priority touchpoints scheduled for closing"
-                action={
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setCurrentPath('/tasks')}
-                  >
-                    View All
-                  </Button>
-                }
-              >
-                {dashboardData.tasks.length === 0 ? (
-                  <p className="text-xs text-ove-muted py-6 text-center">
-                    All tasks completed! Great work.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {dashboardData.tasks.slice(0, 4).map((task) => (
-                      <div
-                        key={task.id}
-                        className="p-3 rounded-lg border border-ove-border flex items-center justify-between bg-white hover:border-ove-forest/40 transition-colors"
+                  {/* Total Inbound Leads */}
+                  <Card className="!p-5 border-l-4 border-l-ove-primary">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
+                        Total Inbound Leads
+                      </span>
+                      <div className="p-2 rounded-lg bg-ove-soft text-ove-primary">
+                        <Users className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-baseline space-x-2">
+                      <span className="text-2xl font-bold text-ove-text">
+                        {summary.totalLeads}
+                      </span>
+                      <span className="text-xs text-ove-primary font-medium">
+                        {summary.newLeads} new
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-ove-muted mt-1">
+                      {summary.leadConversionRatePercent}% converted to deals
+                    </p>
+                  </Card>
+
+                  {/* Open Deals */}
+                  <Card className="!p-5 border-l-4 border-l-[#2C5282]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-ove-muted uppercase tracking-wider">
+                        Open Pipeline Deals
+                      </span>
+                      <div className="p-2 rounded-lg bg-ove-soft text-[#2C5282]">
+                        <KanbanSquare className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-baseline space-x-2">
+                      <span className="text-2xl font-bold text-ove-text">
+                        {summary.openDealsCount}
+                      </span>
+                      <span className="text-xs text-ove-muted">In progression</span>
+                    </div>
+                    <p className="text-[11px] text-ove-muted mt-1">
+                      {summary.qualifiedLeads} qualified prospects
+                    </p>
+                  </Card>
+                </div>
+
+                {/* Mid Section: Pipeline Stages Visual & Lead Sources */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Sales Pipeline by Stage */}
+                  <Card
+                    title="Sales Pipeline Velocity"
+                    subtitle="Distribution of value across all 7 stages"
+                    className="lg:col-span-2"
+                    action={
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        icon={ArrowRight}
+                        onClick={() => setCurrentPath('/deals')}
                       >
-                        <div className="flex items-center space-x-2.5">
-                          <CheckSquare className="w-4 h-4 text-ove-primary flex-shrink-0" />
-                          <div>
-                            <p className="text-xs font-semibold text-ove-text">{task.title}</p>
-                            <p className="text-[10px] text-ove-muted">
-                              Due: {new Date(task.dueDate).toLocaleDateString()} • {task.entityTitle || 'CRM Record'}
-                            </p>
+                        Kanban View
+                      </Button>
+                    }
+                  >
+                    <div className="space-y-3.5 pt-2">
+                      {pipelineByStage.map((s) => {
+                        const pct = Math.round((s.totalValue / maxStageValue) * 100);
+                        return (
+                          <div key={s.stage} className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-semibold text-ove-text flex items-center space-x-2">
+                                <span>{s.label}</span>
+                                <span className="text-[10px] text-ove-muted font-normal">
+                                  ({s.count} deal{s.count !== 1 ? 's' : ''})
+                                </span>
+                              </span>
+                              <span className="font-bold text-ove-forest">
+                                ${s.totalValue.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="w-full bg-ove-soft rounded-full h-2 overflow-hidden border border-ove-border/40">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                  s.stage === '6_won'
+                                    ? 'bg-ove-success'
+                                    : s.stage === '7_lost'
+                                    ? 'bg-ove-error'
+                                    : 'bg-ove-forest'
+                                }`}
+                                style={{ width: `${Math.max(pct, s.count > 0 ? 4 : 0)}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card>
+
+                  {/* Lead Source Distribution */}
+                  <Card
+                    title="Leads by Acquisition Source"
+                    subtitle="Channel attribution of prospective clients"
+                  >
+                    <div className="space-y-3 pt-2">
+                      {(metrics?.leadSourceDistribution || []).map((src) => (
+                        <div key={src.source} className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="capitalize font-medium text-ove-text">
+                              {src.source.replace('_', ' ')}
+                            </span>
+                            <span className="text-ove-muted">
+                              {src.count} ({src.percentage}%)
+                            </span>
+                          </div>
+                          <div className="w-full bg-ove-soft rounded-full h-1.5 overflow-hidden border border-ove-border/40">
+                            <div
+                              className="bg-ove-primary h-1.5 rounded-full"
+                              style={{ width: `${src.percentage}%` }}
+                            />
                           </div>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-ove-soft border border-ove-border text-ove-muted">
-                          {task.priority}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
+                      ))}
+                    </div>
+                  </Card>
+                </div>
 
-              {/* Recent Activity Feed */}
-              <Card
-                title="Recent Customer Activities"
-                subtitle="Audit stream of calls, notes, and deal progressions"
-              >
-                <ActivityStream activities={dashboardData.activities} />
-              </Card>
-            </div>
+                {/* Bottom Split: Upcoming Tasks & Recent Activities */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Upcoming Follow-ups */}
+                  <Card
+                    title="Upcoming Follow-up Tasks"
+                    subtitle="Scheduled customer touchpoints"
+                    action={
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setCurrentPath('/tasks')}
+                      >
+                        All Tasks
+                      </Button>
+                    }
+                  >
+                    {(!metrics?.upcomingFollowUps || metrics.upcomingFollowUps.length === 0) ? (
+                      <p className="text-xs text-ove-muted py-6 text-center">
+                        All tasks completed! Great work.
+                      </p>
+                    ) : (
+                      <div className="space-y-2.5">
+                        {metrics.upcomingFollowUps.map((task) => (
+                          <div
+                            key={task.id}
+                            className="p-3 rounded-lg border border-ove-border flex items-center justify-between bg-white hover:border-ove-forest/40 transition-colors"
+                          >
+                            <div className="flex items-center space-x-2.5">
+                              <CheckSquare className="w-4 h-4 text-ove-primary flex-shrink-0" />
+                              <div>
+                                <p className="text-xs font-semibold text-ove-text">{task.title}</p>
+                                <p className="text-[10px] text-ove-muted">
+                                  Due: {new Date(task.dueDate).toLocaleDateString()} • {task.entityTitle || 'CRM Record'}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-ove-soft border border-ove-border text-ove-muted">
+                              {task.priority}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+
+                  {/* Recent Customer Activities */}
+                  <Card
+                    title="Recent Customer Activities"
+                    subtitle="Chronological audit stream of touchpoints"
+                  >
+                    <ActivityStream activities={metrics?.recentActivities || []} />
+                  </Card>
+                </div>
+              </>
+            )}
           </div>
         );
     }

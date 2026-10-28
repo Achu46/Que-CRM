@@ -28,3 +28,4 @@ router.delete('/:id', requireRole(['admin']), archiveLead);
 router.post('/:id/convert', validate(convertLeadSchema), convertLead);
 
 export default router;
+

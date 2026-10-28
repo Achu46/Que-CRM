@@ -300,3 +300,4 @@ export const store = {
     return true;
   },
 };
+

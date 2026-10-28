@@ -19,3 +19,4 @@ router.get('/:id', getContactById);
 router.put('/:id', validate(updateContactSchema), updateContact);
 
 export default router;
+

@@ -50,3 +50,4 @@ export async function createCompany(req, res, next) {
     next(error);
   }
 }
+

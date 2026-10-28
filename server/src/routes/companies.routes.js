@@ -17,3 +17,4 @@ router.post('/', validate(createCompanySchema), createCompany);
 router.get('/:id', getCompanyById);
 
 export default router;
+

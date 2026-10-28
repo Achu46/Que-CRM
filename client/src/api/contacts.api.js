@@ -33,3 +33,4 @@ export const companiesApi = {
     return res.data;
   },
 };
+

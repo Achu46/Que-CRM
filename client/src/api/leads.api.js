@@ -26,3 +26,4 @@ export const leadsApi = {
     return res.data;
   },
 };
+

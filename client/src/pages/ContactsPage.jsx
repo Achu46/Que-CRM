@@ -214,3 +214,4 @@ export default function ContactsPage({ onSelectContact }) {
     </div>
   );
 }
+

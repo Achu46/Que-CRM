@@ -25,3 +25,4 @@ router.patch('/:id/stage', validate(updateDealStageSchema), updateDealStage);
 router.put('/:id', validate(updateDealSchema), updateDeal);
 
 export default router;
+

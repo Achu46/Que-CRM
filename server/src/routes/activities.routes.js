@@ -15,3 +15,4 @@ router.get('/', getActivities);
 router.post('/', validate(createActivitySchema), createActivity);
 
 export default router;
+

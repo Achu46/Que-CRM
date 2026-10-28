@@ -20,3 +20,4 @@ export const convertLeadSchema = z.object({
   dealAmount: z.number().nonnegative('Deal amount must be non-negative').optional(),
   expectedCloseDate: z.string().optional(),
 });
+

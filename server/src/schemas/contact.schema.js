@@ -12,3 +12,4 @@ export const createContactSchema = z.object({
 });
 
 export const updateContactSchema = createContactSchema.partial();
+

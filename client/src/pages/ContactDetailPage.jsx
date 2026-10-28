@@ -9,7 +9,8 @@ import {
   CheckCircle2, 
   DollarSign, 
   Sparkles,
-  PhoneCall
+  PhoneCall,
+  Send
 } from 'lucide-react';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
@@ -17,6 +18,8 @@ import Badge, { StageBadge, PriorityBadge } from '../components/common/Badge';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ActivityStream from '../components/timeline/ActivityStream';
 import LogActivityModal from '../components/timeline/LogActivityModal';
+import AISummaryCard from '../components/ai/AISummaryCard';
+import AIDraftEmailModal from '../components/ai/AIDraftEmailModal';
 import Modal from '../components/common/Modal';
 import { Input, Select } from '../components/common/Input';
 import { contactsApi } from '../api/contacts.api.js';
@@ -29,6 +32,7 @@ export default function ContactDetailPage({ contactId, onBack }) {
   // Modals
   const [isLogOpen, setIsLogOpen] = useState(false);
   const [isTaskOpen, setIsTaskOpen] = useState(false);
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
 
   // Task Form State
   const [taskData, setTaskData] = useState({
@@ -113,6 +117,14 @@ export default function ContactDetailPage({ contactId, onBack }) {
         </button>
 
         <div className="flex items-center space-x-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={Mail}
+            onClick={() => setIsEmailOpen(true)}
+          >
+            Send Email (Resend)
+          </Button>
           <Button
             size="sm"
             variant="secondary"
@@ -253,8 +265,17 @@ export default function ContactDetailPage({ contactId, onBack }) {
           </Card>
         </div>
 
-        {/* Right Column: Unified Chronological Activity Stream */}
+        {/* Right Column: AI Assistant & Unified Chronological Activity Stream */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Gemini AI Summary Assistant */}
+          <AISummaryCard
+            contactName={`${contact.firstName} ${contact.lastName}`}
+            entityType="contact"
+            entityId={contactId}
+            activities={contact.activities || []}
+          />
+
+          {/* Activity Stream */}
           <Card
             title="Unified Interaction History"
             subtitle="Chronological feed of phone calls, meetings, notes, and emails"
@@ -281,6 +302,14 @@ export default function ContactDetailPage({ contactId, onBack }) {
         entityType="contact"
         entityId={contactId}
         onSuccess={fetchContactDetails}
+      />
+
+      {/* AI Draft & Resend Email Modal */}
+      <AIDraftEmailModal
+        isOpen={isEmailOpen}
+        onClose={() => setIsEmailOpen(false)}
+        contact={contact}
+        onEmailSent={fetchContactDetails}
       />
 
       {/* Add Task Modal */}

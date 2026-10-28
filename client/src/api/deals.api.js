@@ -22,3 +22,4 @@ export const dealsApi = {
     return res.data;
   },
 };
+

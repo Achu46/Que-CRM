@@ -14,6 +14,10 @@ import contactsRoutes from './routes/contacts.routes.js';
 import companiesRoutes from './routes/companies.routes.js';
 import tasksRoutes from './routes/tasks.routes.js';
 import activitiesRoutes from './routes/activities.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
+import emailRoutes from './routes/email.routes.js';
+import aiRoutes from './routes/ai.routes.js';
+import webhookRoutes from './routes/webhook.routes.js';
 
 const app = express();
 
@@ -52,7 +56,7 @@ app.get('/api/health', (req, res) => {
   );
 });
 
-// Feature Routes
+// Core CRM Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadsRoutes);
 app.use('/api/deals', dealsRoutes);
@@ -60,6 +64,12 @@ app.use('/api/contacts', contactsRoutes);
 app.use('/api/companies', companiesRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/activities', activitiesRoutes);
+
+// Analytics & Integration Routes
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/emails', emailRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // 404 handler
 app.use((req, res, next) => {

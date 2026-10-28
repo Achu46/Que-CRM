@@ -36,3 +36,4 @@ export const updateDealStageSchema = z.object({
     });
   }
 });
+

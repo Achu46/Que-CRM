@@ -9,3 +9,4 @@ export const createCompanySchema = z.object({
 });
 
 export const updateCompanySchema = createCompanySchema.partial();
+

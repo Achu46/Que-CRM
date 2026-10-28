@@ -439,3 +439,4 @@ export default function LeadsPage({ onNavigateToContact }) {
     </div>
   );
 }
+

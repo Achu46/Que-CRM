@@ -8,3 +8,4 @@ export const createActivitySchema = z.object({
   content: z.string().trim().optional().default(''),
   metadata: z.record(z.any()).optional().default({}),
 });
+
